@@ -30,4 +30,3 @@ Step to reproduce：
 
 Expected result 
 - reloading the log4j configuration with FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS=true
-# Logout4Shell
