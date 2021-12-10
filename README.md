@@ -1,4 +1,5 @@
 # Logout4Shell
+![logo](https://github.com/Cybereason/Logout4Shell/raw/main/assets/CR_logo.png)
 
 ## Description 
 A vulnerability impacting Apache Log4j versions 2.0 through 2.14.1 was disclosed on the project’s Github on December 9, 2021. The flaw has been dubbed “Log4Shell,”, and has the highest possible severity rating of 10. Apache is pervasive and comprises nearly a third of all web servers in the world—making this a potentially catastrophic flaw.
