@@ -10,7 +10,7 @@ settings “com.sun.jndi.rmi.object.trustURLCodebase” and
 “com.sun.jndi.cosnaming.object.trustURLCodebase” are set to “false”, mitigating this risk.
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
-The code in thsi repository _exploits_ the same vulnerability and the payload therein forces the logger to reconfigure itself with the vulnerable setting disabled - this effectively blocks any further attempt to exploit Log4Shell on this server
+The code in this repository _exploits_ the same vulnerability and the payload therein forces the logger to reconfigure itself with the vulnerable setting disabled - this effectively blocks any further attempt to exploit Log4Shell on this server
 
 ## How it works
 The payload and exploit below use the java runtime to reconfigure the logger. 
