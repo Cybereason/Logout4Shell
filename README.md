@@ -13,7 +13,10 @@ settings `com.sun.jndi.rmi.object.trustURLCodebase` and
 `com.sun.jndi.cosnaming.object.trustURLCodebase` are set to “false”, mitigating this risk.
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
-The code in this repository _exploits_ the same vulnerability and the payload therein forces the logger to reconfigure itself with the vulnerable setting disabled - this effectively blocks any further attempt to exploit Log4Shell on this server
+The [Cybereason](https://www.cybereason.com) research team has developed the
+following code to _exploits_ the same vulnerability and the payload therein
+forces the logger to reconfigure itself with the vulnerable setting disabled -
+this effectively blocks any further attempt to exploit Log4Shell on this server
 
 You can learn more [here](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
 
