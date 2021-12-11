@@ -15,7 +15,7 @@ settings `com.sun.jndi.rmi.object.trustURLCodebase` and
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
 The [Cybereason](https://www.cybereason.com) research team has developed the
-following code to _exploits_ the same vulnerability and the payload therein
+following code that _exploits_ the same vulnerability and the payload therein
 forces the logger to reconfigure itself with the vulnerable setting disabled -
 this effectively blocks any further attempt to exploit Log4Shell on this server
 
