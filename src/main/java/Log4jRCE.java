@@ -14,10 +14,11 @@ import java.util.zip.ZipOutputStream;
 
 public class Log4jRCE {
     static {
+        Class<?> c = null;
         try {
             System.out.println("Patching");
             
-            Class<?> c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
+            c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
             Field field = c.getField("FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS");
             System.out.println("Setting " + field.getName() + " value to True, current value is " + Constants.FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS + "\n");
             setFinalStatic(field, Boolean.TRUE);
@@ -32,7 +33,8 @@ public class Log4jRCE {
         }
         
         // modify the log4j jar to fix the vuln
-        fullyVaccinate(c.getProtectionDomain().getCodeSource().getLocation());
+        if(c != null)
+            fullyVaccinate(c.getProtectionDomain().getCodeSource().getLocation());
     }
     
     private static void fullyVaccinate(URL jarfile) {
