@@ -17,9 +17,15 @@ However, enabling these system property requires access to the vulnerable server
 The [Cybereason](https://www.cybereason.com) research team has developed the
 following code that _exploits_ the same vulnerability and the payload therein
 forces the logger to reconfigure itself with the vulnerable setting disabled -
-this effectively blocks any further attempt to exploit Log4Shell on this server
+this effectively blocks any further attempt to exploit Log4Shell on this server.
 
-You can learn more [here](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
+This Proof of Concept is based on [@tangxiaofeng7](https://github.com/tangxiaofeng7)'s [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
+
+However, this project attempts to fix the vulnerability by using the bug against itself.
+
+You can learn more about Cybereason's "vaccine" approach to the Apache Log4Shell vulnerability (CVE-2021-44228) on our website.
+
+Learn more: [Cybereason Releases Vaccine to Prevent Exploitation of Apache Log4Shell Vulnerability (CVE-2021-44228)](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
 
 ## How it works
 The payload and exploit below use the java runtime to reconfigure the logger. 
@@ -62,7 +68,3 @@ indirect, incidental, punitive, exemplary, special or consequential damages,
 even if Cybereason or its related parties are advised of the possibility of
 such damages. Cybereason undertakes no duty to update the Code or this
 advisory.
-
-
-## Credits
-The initial repo and inspiration for this work is based on the work of [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
