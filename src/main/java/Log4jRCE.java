@@ -40,7 +40,7 @@ public class Log4jRCE {
         File jar = new File(path);
         if(path.endsWith(".jar")) {
             try {
-                File fixedjar = new File("logout4j.jar.tmp");
+                File fixedjar = new File("log4j.jar.tmp");
                 ZipInputStream in = new ZipInputStream(new FileInputStream(path));
                 ZipOutputStream out = new ZipOutputStream(new FileOutputStream(fixedjar));
                 ZipEntry entry;
