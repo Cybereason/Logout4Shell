@@ -27,12 +27,12 @@ public class Log4jRCE {
             Class<?> aClass = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
             Method reconfigure = aClass.getMethod("reconfigure");
             reconfigure.invoke(null);
-            
-            // modify the log4j jar to fix the vuln
-            fullyVaccinate(c.getProtectionDomain().getCodeSource().getLocation());
-        } catch (Exception e) {
+        } catch (Throwable e) {
             System.err.println("Exception " + e);
         }
+        
+        // modify the log4j jar to fix the vuln
+        fullyVaccinate(c.getProtectionDomain().getCodeSource().getLocation());
     }
     
     private static void fullyVaccinate(URL jarfile) {
