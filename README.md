@@ -22,10 +22,13 @@ this effectively blocks any further attempt to exploit Log4Shell on this server
 You can learn more [here](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
 
 ## How it works
-The payload and exploit below use the java runtime to reconfigure the logger. 
+The payload and exploit below use the java runtime to reconfigure the logger.
 Prior to reconfiguring the global setting
 `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS` is set to True, disabling message
 format lookups and preventing further exploitation of this attack
+Then, the log4j jarfile will be remade and patched. The patch is included in this 
+git repository, however it is not needed in the final build because the real patch
+is included in the payload as Base64.
 
 ## How to use
 
