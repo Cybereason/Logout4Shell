@@ -31,7 +31,7 @@ format lookups and preventing further exploitation of this attack
 
 1. Download this report and build it 
 
-   1.1 `git clone https://github.com/cybereason/Logout4Shell.ssh`
+   1.1 `git clone https://github.com/cybereason/Logout4Shell.git`
 
    1.2 build it - `mvn package`
 
