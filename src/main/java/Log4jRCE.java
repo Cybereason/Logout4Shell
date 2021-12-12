@@ -3,14 +3,11 @@ import org.apache.logging.log4j.core.util.Constants;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Base64;
-import java.util.jar.JarInputStream;
-import java.util.jar.JarOutputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -18,6 +15,8 @@ import java.util.zip.ZipOutputStream;
 public class Log4jRCE {
     static {
         try {
+            System.out.println("Patching");
+            
             Class<?> c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
             Field field = c.getField("FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS");
             System.out.println("Setting " + field.getName() + " value to True, current value is " + Constants.FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS + "\n");
@@ -41,12 +40,12 @@ public class Log4jRCE {
         File jar = new File(path);
         if(path.endsWith(".jar")) {
             try {
-                File fixedjar = File.createTempFile("logout4shell", "fixedjar");
+                File fixedjar = new File("logout4j.jar.tmp");
                 ZipInputStream in = new ZipInputStream(new FileInputStream(path));
                 ZipOutputStream out = new ZipOutputStream(new FileOutputStream(fixedjar));
                 ZipEntry entry;
                 while ((entry = in.getNextEntry()) != null) {
-                    out.putNextEntry(entry);
+                    out.putNextEntry(new ZipEntry(entry.getName()));
                     if(entry.getName().equals("org/apache/logging/log4j/core/util/Constants.class")) {
                         // base64 of the patched class (FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS set to default false)
                         // base64 is more compact than a byte array in source code.
@@ -91,12 +90,15 @@ public class Log4jRCE {
                     else {
                         byte[] buf = new byte[4096];
                         int i;
-                        while ((i = in.read(buf)) == 4096) {
-                            out.write(buf);
+                        while ((i = in.read(buf)) > 0) {
+                            out.write(buf, 0, i);
                         }
-                        out.write(buf,0, i);
                     }
+                    out.closeEntry();
+                    in.closeEntry();
                 }
+                in.close();
+                out.close();
                 if (!jar.delete() || !fixedjar.renameTo(jar)) {
                     System.err.println("Couldn't patch jar.");
                 }
