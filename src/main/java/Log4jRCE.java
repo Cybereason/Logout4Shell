@@ -1,5 +1,3 @@
-import org.apache.logging.log4j.core.util.Constants;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -9,7 +7,8 @@ public class Log4jRCE {
         try {
             Class<?> c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
             Field field = c.getField("FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS");
-            System.out.println("Setting " + field.getName() + " value to True, current value is " + Constants.FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS + "\n");
+            boolean currVal = field.getBoolean(c);
+            System.out.printf("Setting %s value to True, current value is %B%n", field.getName(), currVal);
             setFinalStatic(field, Boolean.TRUE);
 
             //reconfiguring log4j
