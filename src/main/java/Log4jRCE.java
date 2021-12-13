@@ -1,9 +1,16 @@
-import org.apache.logging.log4j.core.util.Constants;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.core.LoggerContext;
+import org.apache.logging.log4j.core.config.Configuration;
+import org.apache.logging.log4j.core.config.Configurator;
+import org.apache.logging.log4j.core.lookup.Interpolator;
+import org.apache.logging.log4j.core.lookup.StrLookup;
+import org.apache.logging.log4j.core.selector.ContextSelector;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
@@ -11,32 +18,67 @@ import java.util.Base64;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
+import java.util.HashMap;
+import java.util.Map;
 
 public class Log4jRCE {
     static {
         Class<?> c = null;
         try {
-            System.out.println("Patching");
-            
-            c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
-            Field field = c.getField("FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS");
-            System.out.println("Setting " + field.getName() + " value to True, current value is " + Constants.FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS + "\n");
-            setFinalStatic(field, Boolean.TRUE);
+            try { // Try for versions of Log4j >= 2.10
+              c = Thread.currentThread().getContextClassLoader().loadClass("org.apache.logging.log4j.core.util.Constants");
+              Field field = c.getField("FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS");
+              System.out.println("Setting " + field.getName() + " value to True");
+              setFinalStatic(field, Boolean.TRUE);
+            } catch (NoSuchFieldException e) { // Fall back to older versions. Try to make JNDI non instantiable
+                c = null;
+                System.err.println("No field FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS - version <= 2.9.0");
+                System.err.println("Will attempt to modify the configuration directly");
+            }
 
             //reconfiguring log4j
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            Class<?> aClass = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
-            Method reconfigure = aClass.getMethod("reconfigure");
-            reconfigure.invoke(null);
-        } catch (Throwable e) {
+            Class<?> configuratorClass = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
+            try {
+                Method reconfigure = configuratorClass.getMethod("reconfigure");
+                reconfigure.invoke(null);
+            } catch (Exception ex) {
+                Method getFactoryMethod = configuratorClass.getDeclaredMethod("getFactory");
+                getFactoryMethod.setAccessible(true);
+                Object factory = getFactoryMethod.invoke(null);
+                Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
+                Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
+                Object contextSelector = getSelector.invoke(factory, null);
+                ContextSelector ctxSelector = (ContextSelector) contextSelector;
+                for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
+                    ctx.reconfigure();
+                    System.err.println("Reconfiguring context");
+                    Configuration config = ctx.getConfiguration();
+                    StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
+                    if (resolver instanceof Interpolator) {
+                        System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
+                        Field lookups = null;
+                        try {
+                            lookups = Interpolator.class.getDeclaredField("lookups");
+                        } catch (NoSuchFieldException e) {
+                            lookups = Interpolator.class.getDeclaredField("strLookupMap");
+                        }
+                        lookups.setAccessible(true);
+                        Map<String, StrLookup> lookupMap = (Map<String, StrLookup>) lookups.get(resolver);
+                        lookupMap.remove("jndi");
+                    }
+                }
+            }
+        } catch (Exception e) {
             System.err.println("Exception " + e);
+            e.printStackTrace();
         }
-        
+
         // modify the log4j jar to fix the vuln
         if(c != null)
             fullyVaccinate(c.getProtectionDomain().getCodeSource().getLocation());
     }
-    
+
     private static void fullyVaccinate(URL jarfile) {
         String path = jarfile.getFile();
         File jar = new File(path);
@@ -111,12 +153,16 @@ public class Log4jRCE {
             }
         }
     }
-    
+
     static void setFinalStatic(Field field, Object newValue) throws Exception {
+        setAccess(field);
+        field.set(null, newValue);
+    }
+
+    private static void setAccess(Field field) throws NoSuchFieldException, IllegalAccessException {
         field.setAccessible(true);
         Field modifiersField = Field.class.getDeclaredField("modifiers");
         modifiersField.setAccessible(true);
         modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
-        field.set(null, newValue);
     }
 }

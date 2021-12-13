@@ -17,18 +17,27 @@ However, enabling these system property requires access to the vulnerable server
 The [Cybereason](https://www.cybereason.com) research team has developed the
 following code that _exploits_ the same vulnerability and the payload therein
 forces the logger to reconfigure itself with the vulnerable setting disabled -
-this effectively blocks any further attempt to exploit Log4Shell on this server
+this effectively blocks any further attempt to exploit Log4Shell on this server.
 
-You can learn more [here](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
+This Proof of Concept is based on [@tangxiaofeng7](https://github.com/tangxiaofeng7)'s [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
+
+However, this project attempts to fix the vulnerability by using the bug against itself.
+
+You can learn more about Cybereason's "vaccine" approach to the Apache Log4Shell vulnerability (CVE-2021-44228) on our website.
+
+Learn more: [Cybereason Releases Vaccine to Prevent Exploitation of Apache Log4Shell Vulnerability (CVE-2021-44228)](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
+
+## Supported versions
+Logout4Shell supports log4j version 2.0 - 2.14.1
 
 ## How it works
-The payload and exploit below use the java runtime to reconfigure the logger.
-Prior to reconfiguring the global setting
-`FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS` is set to True, disabling message
-format lookups and preventing further exploitation of this attack
-Then, the log4j jarfile will be remade and patched. The patch is included in this 
+On versions (>= 2.10.0) of log4j that support the configuration `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS`,
+this value is set to `True` disabling the lookup mechanism entirely. 
+Then, the log4j jarfile will be remade and patched. The patch is included in this
 git repository, however it is not needed in the final build because the real patch
 is included in the payload as Base64.
+On older versions, the payload searches all
+existing LoggerContexts and removes the jndi key from the `Interpolator` used to process `${}` fields.
 
 ## How to use
 
@@ -38,7 +47,7 @@ is included in the payload as Base64.
 
    1.2 build it - `mvn package`
 
-   1.3 `cd target/class`
+   1.3 `cd target/classes`
 
    1.4 run the webserver - `python3 -m http.server 8888`
 
@@ -65,7 +74,3 @@ indirect, incidental, punitive, exemplary, special or consequential damages,
 even if Cybereason or its related parties are advised of the possibility of
 such damages. Cybereason undertakes no duty to update the Code or this
 advisory.
-
-
-## Credits
-The initial repo and inspiration for this work is based on the work of [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
