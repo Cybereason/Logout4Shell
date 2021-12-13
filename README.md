@@ -41,7 +41,7 @@ format lookups and preventing further exploitation of this attack
 
    1.2 build it - `mvn package`
 
-   1.3 `cd target/class`
+   1.3 `cd target/classes`
 
    1.4 run the webserver - `python3 -m http.server 8888`
 
