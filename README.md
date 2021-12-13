@@ -27,11 +27,18 @@ You can learn more about Cybereason's "vaccine" approach to the Apache Log4Shell
 
 Learn more: [Cybereason Releases Vaccine to Prevent Exploitation of Apache Log4Shell Vulnerability (CVE-2021-44228)](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
 
+## Supported versions
+Logout4Shell supports log4j version 2.0 - 2.14.1
+
 ## How it works
-The payload and exploit below use the java runtime to reconfigure the logger. 
-Prior to reconfiguring the global setting
-`FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS` is set to True, disabling message
-format lookups and preventing further exploitation of this attack
+On versions (>= 2.10.0) of log4j that support the configuration `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS`,
+this value is set to `True` disabling the lookup mechanism entirely. On older versions, the payload searches all
+existing LoggerContexts and removes the jndi key from the `Interpolator` used to process `${}` fields.
+
+In both cases, this change will revert when the JVM restarts. 
+
+We're considering a more permanent fix - for example, edit the jar on disk of the vulnerable server so that the class
+JndiLookup will not be instantiated. We'd love community feedback on such an idea and it's associated risks.
 
 ## How to use
 
