@@ -42,7 +42,7 @@ JndiLookup will not be instantiated. We'd love community feedback on such an ide
 
 ## How to use
 
-1. Download this report and build it 
+1. Download this repository and build it 
 
    1.1 `git clone https://github.com/cybereason/Logout4Shell.git`
 
