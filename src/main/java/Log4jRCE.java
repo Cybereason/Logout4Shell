@@ -15,9 +15,7 @@ import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.apache.logging.log4j.core.selector.ContextSelector;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -51,7 +49,7 @@ public class Log4jRCE {
                 Method reconfigure = c.getMethod("reconfigure");
                 reconfigure.invoke(null);
             } catch (Exception ex) {
-                // Log4j is older.
+                // Log4j is probably older.
                 Method getFactoryMethod = c.getDeclaredMethod("getFactory");
                 getFactoryMethod.setAccessible(true);
                 Object factory = getFactoryMethod.invoke(null);
@@ -67,10 +65,12 @@ public class Log4jRCE {
                     if (resolver instanceof Interpolator) {
                         System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
                         Field lookups;
+                        //noinspection RedundantSuppression
                         try {
                             //noinspection JavaReflectionMemberAccess
                             lookups = Interpolator.class.getDeclaredField("lookups");
                         } catch (NoSuchFieldException e) {
+                            //noinspection JavaReflectionMemberAccess
                             lookups = Interpolator.class.getDeclaredField("strLookupMap");
                         }
                         lookups.setAccessible(true);
@@ -190,6 +190,66 @@ public class Log4jRCE {
                         --- END COMMENTED OUT CODE ---
                          */
                         case "org/apache/logging/log4j/core/lookup/JndiLookup.class":
+                            break;
+                        case "META-INF/org/apache/logging/log4j/core/config/plugins/Log4j2Plugins.dat":
+                            DataOutputStream os = new DataOutputStream(out);
+                            DataInputStream is = new DataInputStream(new BufferedInputStream(in));
+
+                            // The old count
+                            int count = is.readInt();
+
+                            // Names of the visited categories
+                            String[] categoryNames = new String[count];
+                            // Counts in categories
+                            int[] ecounts = new int[count];
+                            // Bytes of the plugin entries, [category count][entries in category][bytes]
+                            byte[][][] bytes = new byte[count][][];
+                            for (int i = 0; i < count; i++) {
+                                // Category name is read and stores
+                                categoryNames[i] = is.readUTF();
+                                // Amount of entries in category is read and stored, ecounts[i] will be modified gradually.
+                                int ecount = ecounts[i] = is.readInt();
+                                // Initialize bytearray for this category
+                                bytes[i] = new byte[ecount][];
+
+                                // Loop through each plugin
+                                for (int j = 0; j < ecount; j++) {
+                                    // Create streams for this plugin
+                                    ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                    DataOutputStream dos = new DataOutputStream(baos);
+                                    // Read the name
+                                    String name = is.readUTF();
+                                    // Copy plugin data to plugin byte array
+                                    dos.writeUTF(name);
+                                    dos.writeUTF(is.readUTF());
+                                    dos.writeUTF(is.readUTF());
+                                    dos.writeBoolean(is.readBoolean());
+                                    dos.writeBoolean(is.readBoolean());
+                                    // Store plugin byte array unless it is JNDI
+                                    if(name.equals("jndi")) {
+                                        ecounts[i]--;
+                                    }
+                                    else
+                                        bytes[i][j - (ecount - ecounts[i])] = baos.toByteArray();
+                                }
+                            }
+
+                            // Write back the data we just read
+                            os.writeInt(count);
+                            for (int i = 0; i < count; i++) {
+                                // Write category name
+                                os.writeUTF(categoryNames[i]);
+                                // Amount of plugins in category
+                                int ecount = ecounts[i];
+                                // Write number of plugins in category
+                                os.writeInt(ecount);
+
+                                // Loop through each plugin and write its bytes
+                                for (int j = 0; j < ecount; j++) {
+                                    os.write(bytes[i][j]);
+                                }
+                            }
+
                             break;
                         default:
                             byte[] buf = new byte[4096];

