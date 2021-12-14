@@ -75,3 +75,6 @@ indirect, incidental, punitive, exemplary, special or consequential damages,
 even if Cybereason or its related parties are advised of the possibility of
 such damages. Cybereason undertakes no duty to update the Code or this
 advisory.
+
+## License
+The source code for the site is licensed under the MIT license, which you can find in the LICENSE file.
