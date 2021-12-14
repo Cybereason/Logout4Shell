@@ -41,7 +41,7 @@ existing LoggerContexts and removes the jndi key from the `Interpolator` used to
 
 ## How to use
 
-1. Download this report and build it 
+1. Download this repository and build it 
 
    1.1 `git clone https://github.com/cybereason/Logout4Shell.git`
 
@@ -74,3 +74,6 @@ indirect, incidental, punitive, exemplary, special or consequential damages,
 even if Cybereason or its related parties are advised of the possibility of
 such damages. Cybereason undertakes no duty to update the Code or this
 advisory.
+
+## License
+The source code for the site is licensed under the MIT license, which you can find in the LICENSE file.
