@@ -1,14 +1,20 @@
+/* Commented out because they are only needed for another commented-out
+   code block.
+--- BEGIN COMMENTED OUT CODE ---
 import jdk.internal.org.objectweb.asm.ClassReader;
 import jdk.internal.org.objectweb.asm.ClassWriter;
 import jdk.internal.org.objectweb.asm.Opcodes;
 import jdk.internal.org.objectweb.asm.tree.*;
+import java.io.ByteArrayOutputStream;
+import java.util.Optional;
+--- END COMMENTED OUT CODE ---
+ */
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
 import org.apache.logging.log4j.core.lookup.Interpolator;
 import org.apache.logging.log4j.core.lookup.StrLookup;
 import org.apache.logging.log4j.core.selector.ContextSelector;
 
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,7 +23,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.Base64;
-import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -33,7 +38,7 @@ public class Log4jRCE {
                 System.out.println("Setting " + field.getName() + " value to True");
                 setAccess(field);
                 field.set(null, Boolean.TRUE);
-            } catch (NoSuchFieldException e) { // Fall back to older versions. Try to make JNDI non instantiable
+            } catch (Throwable e) { // Fall back to older versions. Try to make JNDI non instantiable
                 c = null;
                 System.err.println("No field FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS - version <= 2.9.0");
                 System.err.println("Will attempt to modify the configuration directly");
@@ -137,6 +142,9 @@ public class Log4jRCE {
                                     "UQCIAAEAYwAAAAIABQ==");
                             out.write(newClass);
                             break;
+                        /* Commented out because of compatibility issues - JNDI will be deleted instead
+                           (which will help in almost the same way).
+                        --- BEGIN COMMENTED OUT CODE ---
                         case "org/apache/logging/log4j/core/lookup/Interpolator":
                             try {
                                 // Read class
@@ -179,6 +187,8 @@ public class Log4jRCE {
                                 System.err.println("Couldn't fully vaccinate! Deleting JNDILookup to make program crash when the exploit is used!!");
                             }
                             break;
+                        --- END COMMENTED OUT CODE ---
+                         */
                         case "org/apache/logging/log4j/core/lookup/JndiLookup.class":
                             break;
                         default:
