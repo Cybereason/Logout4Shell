@@ -2,27 +2,36 @@
 ![logo](https://github.com/Cybereason/Logout4Shell/raw/main/assets/CR_logo.png)
 
 ## Description 
-A vulnerability impacting Apache Log4j versions 2.0 through 2.14.1 was disclosed on the project’s Github on December 9, 2021. The flaw has been dubbed “Log4Shell,”, and has the highest possible severity rating of 10. Software made or managed by the Apache Software Foundation (From here on just "Apache") is pervasive and comprises nearly a third of all web servers in the world—making this a potentially catastrophic flaw.
+
+A vulnerability impacting Apache Log4j versions 2.0 through 2.14.1 was disclosed on the project’s Github on December 9, 2021. 
+The flaw has been dubbed “Log4Shell,”, and has the highest possible severity rating of 10. Software made or
+managed by the Apache Software Foundation (From here on just "Apache") is pervasive and comprises nearly a third of all
+web servers in the world—making this a potentially catastrophic flaw.
 The Log4Shell vulnerability CVE-2021-44228 was published on 12/9/2021 and allows remote code execution on vulnerabe servers.
 
-While the best mitigation against this vulnerability is to patch log4j to
-2.15.0 and above, in Log4j version (>=2.10) this behavior can be mitigated by
+On 12/14/2001 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0.
+
+While the best mitigation against these vulnerabilities is to patch log4j to
+~~2.15.0~~2.16.0 and above, in Log4j version (>=2.10) this behavior can be mitigated by
 setting system property `log4j2.formatMsgNoLookups` to `true` or by removing
 the JndiLookup class from the classpath. 
-Additionally, if the server has Java runtimes >= 8u121, then by default, the
+
+~~Additionally, if the server has Java runtimes >= 8u121, then by default, the
 settings `com.sun.jndi.rmi.object.trustURLCodebase` and
-`com.sun.jndi.cosnaming.object.trustURLCodebase` are set to “false”, mitigating this risk.
+`com.sun.jndi.cosnaming.object.trustURLCodebase` are set to “false”, mitigating this risk.~~
+Using known techniques for exploitation of java serialization, it was shown that all versions of java are now
+vulnerable.
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
 The [Cybereason](https://www.cybereason.com) research team has developed the
 following code that _exploits_ the same vulnerability and the payload therein
 forces the logger to reconfigure itself with the vulnerable setting disabled -
-this effectively blocks any further attempt to exploit Log4Shell on this server.
+this effectively blocks any further attempt to exploit Log4Shell on this server. In addition, the payload also searches
+for all `LoggerContext` and removes the JNDI `Interpolator` preventing the abuses disclosed in CVE-2021-45046. 
 
 This Proof of Concept is based on [@tangxiaofeng7](https://github.com/tangxiaofeng7)'s [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
 
 However, this project attempts to fix the vulnerability by using the bug against itself.
-
 You can learn more about Cybereason's "vaccine" approach to the Apache Log4Shell vulnerability (CVE-2021-44228) on our website.
 
 Learn more: [Cybereason Releases Vaccine to Prevent Exploitation of Apache Log4Shell Vulnerability (CVE-2021-44228)](https://www.cybereason.com/blog/cybereason-releases-vaccine-to-prevent-exploitation-of-apache-log4shell-vulnerability-cve-2021-44228)
@@ -31,9 +40,9 @@ Learn more: [Cybereason Releases Vaccine to Prevent Exploitation of Apache Log4S
 Logout4Shell supports log4j version 2.0 - 2.14.1
 
 ## How it works
-On versions (>= 2.10.0) of log4j that support the configuration `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS`,
-this value is set to `True` disabling the lookup mechanism entirely. On older versions, the payload searches all
-existing LoggerContexts and removes the jndi key from the `Interpolator` used to process `${}` fields.
+On versions (>= 2.10.0) of log4j that support the configuration `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS`, this value is
+set to `True` disabling the lookup mechanism entirely. In addition (and specifically in versions < 2.10.0) the payload searches all
+existing `LoggerContexts` and removes the JNDI key from the `Interpolator` used to process `${}` fields.
 
 In both cases, this change will revert when the JVM restarts. 
 

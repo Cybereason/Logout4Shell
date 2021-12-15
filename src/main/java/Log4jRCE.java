@@ -29,36 +29,41 @@ public class Log4jRCE {
             //reconfiguring log4j
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
             Class<?> configuratorClass = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
-            try {
-                Method reconfigure = configuratorClass.getMethod("reconfigure");
-                reconfigure.invoke(null);
-            } catch (Exception ex) {
-                Method getFactoryMethod = configuratorClass.getDeclaredMethod("getFactory");
-                getFactoryMethod.setAccessible(true);
-                Object factory = getFactoryMethod.invoke(null);
-                Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
-                Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
-                Object contextSelector = getSelector.invoke(factory, null);
-                ContextSelector ctxSelector = (ContextSelector) contextSelector;
-                for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
-                    ctx.reconfigure();
-                    System.err.println("Reconfiguring context");
-                    Configuration config = ctx.getConfiguration();
-                    StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
-                    if (resolver instanceof Interpolator) {
-                        System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
-                        Field lookups = null;
-                        try {
-                            lookups = Interpolator.class.getDeclaredField("lookups");
-                        } catch (NoSuchFieldException e) {
-                            lookups = Interpolator.class.getDeclaredField("strLookupMap");
-                        }
-                        lookups.setAccessible(true);
-                        Map<String, StrLookup> lookupMap = (Map<String, StrLookup>) lookups.get(resolver);
-                        lookupMap.remove("jndi");
+
+            // Due to CVE-2021-45046 we're no longer using the reconfigure method -
+            // Instead we reconfigure the logger but *also* remove the JNDI listener from the plugin map
+            //try {
+            //    Method reconfigure = configuratorClass.getMethod("reconfigure");
+            //    reconfigure.invoke(null);
+            //} catch (Exception ex) {
+
+            Method getFactoryMethod = configuratorClass.getDeclaredMethod("getFactory");
+            getFactoryMethod.setAccessible(true);
+            Object factory = getFactoryMethod.invoke(null);
+            Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
+            Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
+            Object contextSelector = getSelector.invoke(factory, null);
+            ContextSelector ctxSelector = (ContextSelector) contextSelector;
+            for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
+                ctx.reconfigure();
+                System.err.println("Reconfiguring context");
+                Configuration config = ctx.getConfiguration();
+                StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
+                if (resolver instanceof Interpolator) {
+                    System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
+                    Field lookups = null;
+                    try {
+                        lookups = Interpolator.class.getDeclaredField("lookups");
+                    } catch (NoSuchFieldException e) {
+                        lookups = Interpolator.class.getDeclaredField("strLookupMap");
                     }
+                    lookups.setAccessible(true);
+                    Map<String, StrLookup> lookupMap = (Map<String, StrLookup>) lookups.get(resolver);
+                    lookupMap.remove("jndi");
                 }
             }
+
+            //}
         } catch (Exception e) {
             System.err.println("Exception " + e);
             e.printStackTrace();
