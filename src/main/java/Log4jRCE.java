@@ -45,12 +45,12 @@ public class Log4jRCE {
             Object contextSelector = getSelector.invoke(factory, null);
             ContextSelector ctxSelector = (ContextSelector) contextSelector;
             for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
-                ctx.reconfigure();
-                System.err.println("Reconfiguring context");
+                // The following deadlocks in some tests when using ThreadContext attacks
+                //ctx.reconfigure();
                 Configuration config = ctx.getConfiguration();
                 StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
                 if (resolver instanceof Interpolator) {
-                    System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
+                    System.err.println("Lookup is an Interpolator - removing JNDI");
                     Field lookups = null;
                     try {
                         lookups = Interpolator.class.getDeclaredField("lookups");

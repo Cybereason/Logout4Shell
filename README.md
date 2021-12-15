@@ -9,25 +9,22 @@ managed by the Apache Software Foundation (From here on just "Apache") is pervas
 web servers in the world—making this a potentially catastrophic flaw.
 The Log4Shell vulnerability CVE-2021-44228 was published on 12/9/2021 and allows remote code execution on vulnerabe servers.
 
-On 12/14/2001 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0.
 
 While the best mitigation against these vulnerabilities is to patch log4j to
-~~2.15.0~~2.16.0 and above, in Log4j version (>=2.10) this behavior can be mitigated by
+~~2.15.0~~2.16.0 and above, in Log4j version (>=2.10) this behavior can be partially mitigated (see below) by
 setting system property `log4j2.formatMsgNoLookups` to `true` or by removing
 the JndiLookup class from the classpath. 
 
-~~Additionally, if the server has Java runtimes >= 8u121, then by default, the
-settings `com.sun.jndi.rmi.object.trustURLCodebase` and
-`com.sun.jndi.cosnaming.object.trustURLCodebase` are set to “false”, mitigating this risk.~~
-Using known techniques for exploitation of java serialization, it was shown that all versions of java are now
-vulnerable.
+On 12/14/2001 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0. This
+vulnerability showed that in certain scenarios, for example, where attackers can control a thread-context variable that
+gets logged, even the flag `log4j2.formatMsgNoLookups` is insufficient to mitigate log4shell.
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
 The [Cybereason](https://www.cybereason.com) research team has developed the
 following code that _exploits_ the same vulnerability and the payload therein
-forces the logger to reconfigure itself with the vulnerable setting disabled -
-this effectively blocks any further attempt to exploit Log4Shell on this server. In addition, the payload also searches
-for all `LoggerContext` and removes the JNDI `Interpolator` preventing the abuses disclosed in CVE-2021-45046. 
+sets the vulnerable setting as disabled. The payload then searches
+for all `LoggerContext` and removes the JNDI `Interpolator` preventing even recursive abuses. 
+this effectively blocks any further attempt to exploit Log4Shell on this server. 
 
 This Proof of Concept is based on [@tangxiaofeng7](https://github.com/tangxiaofeng7)'s [tangxiaofeng7/apache-log4j-poc](https://github.com/tangxiaofeng7/apache-log4j-poc)
 
@@ -41,10 +38,11 @@ Logout4Shell supports log4j version 2.0 - 2.14.1
 
 ## How it works
 On versions (>= 2.10.0) of log4j that support the configuration `FORMAT_MESSAGES_PATTERN_DISABLE_LOOKUPS`, this value is
-set to `True` disabling the lookup mechanism entirely. In addition (and specifically in versions < 2.10.0) the payload searches all
-existing `LoggerContexts` and removes the JNDI key from the `Interpolator` used to process `${}` fields.
+set to `True` disabling the lookup mechanism entirely. As disclosed in CVE-2021-45046, setting this flag is insufficient,
+therefore the payload searches all existing `LoggerContexts` and removes the JNDI key from the `Interpolator` used to
+process `${}` fields. This means that even other recursive uses of the JNDI mechanisms will fail.
 
-In both cases, this change will revert when the JVM restarts. 
+These changes are local to the running java process and will revert when the JVM restarts. 
 
 We're considering a more permanent fix - for example, edit the jar on disk of the vulnerable server so that the class
 JndiLookup will not be instantiated. We'd love community feedback on such an idea and it's associated risks.
