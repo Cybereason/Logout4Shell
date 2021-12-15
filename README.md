@@ -9,7 +9,7 @@ managed by the Apache Software Foundation (From here on just "Apache") is pervas
 web servers in the world—making this a potentially catastrophic flaw.
 The Log4Shell vulnerability CVE-2021-44228 was published on 12/9/2021 and allows remote code execution on vulnerabe servers.
 
-On 12/14/2001 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0.
+On 12/14/2021 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0.
 
 While the best mitigation against these vulnerabilities is to patch log4j to
 ~~2.15.0~~2.16.0 and above, in Log4j version (>=2.10) this behavior can be mitigated by
