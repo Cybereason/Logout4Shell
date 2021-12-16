@@ -44,41 +44,45 @@ public class Log4jRCE {
 
             // Reconfigure log4j
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            c = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
-            try {
-                Method reconfigure = c.getMethod("reconfigure");
-                reconfigure.invoke(null);
-            } catch (Exception ex) {
-                // Log4j is probably older.
-                Method getFactoryMethod = c.getDeclaredMethod("getFactory");
-                getFactoryMethod.setAccessible(true);
-                Object factory = getFactoryMethod.invoke(null);
-                Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
-                Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
-                Object contextSelector = getSelector.invoke(factory, (Object[]) null);
-                ContextSelector ctxSelector = (ContextSelector) contextSelector;
-                for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
-                    ctx.reconfigure();
-                    System.err.println("Reconfiguring context");
-                    Configuration config = ctx.getConfiguration();
-                    StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
-                    if (resolver instanceof Interpolator) {
-                        System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
-                        Field lookups;
-                        //noinspection RedundantSuppression
-                        try {
-                            //noinspection JavaReflectionMemberAccess
-                            lookups = Interpolator.class.getDeclaredField("lookups");
-                        } catch (NoSuchFieldException e) {
-                            //noinspection JavaReflectionMemberAccess
-                            lookups = Interpolator.class.getDeclaredField("strLookupMap");
-                        }
-                        lookups.setAccessible(true);
-                        Map<String, StrLookup> lookupMap = (Map<String, StrLookup>) lookups.get(resolver);
-                        lookupMap.remove("jndi");
+            Class<?> configuratorClass = classLoader.loadClass("org.apache.logging.log4j.core.config.Configurator");
+
+            // Due to CVE-2021-45046 we're no longer using the reconfigure method -
+            // Instead we reconfigure the logger but *also* remove the JNDI listener from the plugin map
+            //try {
+            //    Method reconfigure = configuratorClass.getMethod("reconfigure");
+            //    reconfigure.invoke(null);
+            //} catch (Exception ex) {
+
+            Method getFactoryMethod = configuratorClass.getDeclaredMethod("getFactory");
+            getFactoryMethod.setAccessible(true);
+            Object factory = getFactoryMethod.invoke(null);
+            Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
+            Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
+            Object contextSelector = getSelector.invoke(factory, null);
+            ContextSelector ctxSelector = (ContextSelector) contextSelector;
+            for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
+                // The following deadlocks in some tests when using ThreadContext attacks
+                //ctx.reconfigure();
+                Configuration config = ctx.getConfiguration();
+                StrLookup resolver = config.getStrSubstitutor().getVariableResolver();
+                if (resolver instanceof Interpolator) {
+                    System.err.println("Lookup is an Interpolator - attempting to remove JNDI");
+                    Field lookups;
+                    //noinspection RedundantSuppression
+                    try {
+                        //noinspection JavaReflectionMemberAccess
+                        lookups = Interpolator.class.getDeclaredField("lookups");
+                    } catch (NoSuchFieldException e) {
+                        //noinspection JavaReflectionMemberAccess
+                        lookups = Interpolator.class.getDeclaredField("strLookupMap");
                     }
+                    lookups.setAccessible(true);
+                    Map<String, StrLookup> lookupMap = (Map<String, StrLookup>) lookups.get(resolver);
+                    lookupMap.remove("jndi");
                 }
             }
+
+            //}
         } catch (Throwable e) {
             System.err.println("Exception " + e);
             e.printStackTrace();
