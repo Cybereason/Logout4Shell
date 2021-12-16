@@ -58,7 +58,7 @@ public class Log4jRCE {
             Object factory = getFactoryMethod.invoke(null);
             Class<?> log4jContextFactoryClass = classLoader.loadClass("org.apache.logging.log4j.core.impl.Log4jContextFactory");
             Method getSelector = log4jContextFactoryClass.getMethod("getSelector");
-            Object contextSelector = getSelector.invoke(factory, null);
+            Object contextSelector = getSelector.invoke(factory, (Object[]) null);
             ContextSelector ctxSelector = (ContextSelector) contextSelector;
             for (LoggerContext ctx: ctxSelector.getLoggerContexts()) {
                 // The following deadlocks in some tests when using ThreadContext attacks
