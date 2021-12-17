@@ -60,6 +60,8 @@ loads the `JndiLookup` class. It then attempts to modify this jar by removing th
 modifying the plugin registry. There is inherently more risk in this approach as if the `log4j-core.jar` becomes
 corrupted, the JVM may crash on start.
 
+Persistent mode is based on the work of [TudbuT](https://github.com/TudbuT). Thank you!
+
 ## How to use
 
 1. Download this repository and build it 
