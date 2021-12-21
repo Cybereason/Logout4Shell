@@ -11,13 +11,16 @@ The Log4Shell vulnerability CVE-2021-44228 was published on 12/9/2021 and allows
 
 
 While the best mitigation against these vulnerabilities is to patch log4j to
-~~2.15.0~~2.16.0 and above, in Log4j version (>=2.10) this behavior can be partially mitigated (see below) by
+~~2.15.0~~2.17.0 and above, in Log4j version (>=2.10) this behavior can be partially mitigated (see below) by
 setting system property `log4j2.formatMsgNoLookups` to `true` or by removing
 the JndiLookup class from the classpath. 
 
 On 12/14/2021 the Apache software foundation disclosed CVE-2021-45046 which was patched in log4j version 2.16.0. This
 vulnerability showed that in certain scenarios, for example, where attackers can control a thread-context variable that
-gets logged, even the flag `log4j2.formatMsgNoLookups` is insufficient to mitigate log4shell.
+gets logged, even the flag `log4j2.formatMsgNoLookups` is insufficient to mitigate log4shell. An
+additional CVE, less severe, CVE-2021-45105 was discovered. This vulnerability exposes the server to
+an infinite recursion that could crash the server is some scenarios. It is recommened to upgrade to
+2.17.0
 
 However, enabling these system property requires access to the vulnerable servers as well as a restart. 
 The [Cybereason](https://www.cybereason.com) research team has developed the
@@ -82,8 +85,10 @@ Persistent mode is based on the work of [TudbuT](https://github.com/TudbuT). Tha
    2.1 `git clone https://github.com/mbechler/marshalsec.git`
 
    2.2 `mvn package -DskipTests`
+   
+   2.3 `cd target`
 
-   2.3 <a name="execution"></a>`java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCE<Transient/Persistent>"`
+   2.4 <a name="execution"></a>`java -cp marshalsec-0.0.3-SNAPSHOT-all.jar marshalsec.jndi.LDAPRefServer "http://<IP_OF_PYTHON_SERVER_FROM_STEP_1>:8888/#Log4jRCE<Transient/Persistent>"`
 
 4. To immunize a server
 
