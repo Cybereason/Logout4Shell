@@ -43,12 +43,16 @@
                                     <filterset>
                                         <filter token="persistence" value="false"/>
                                         <filter token="suffix" value="Transient"/>
+                                        <filter token="startcomment" value="/*"/>
+                                        <filter token="endcomment" value="*/"/>
                                     </filterset>
                                 </copy>
                                 <copy file="${basedir}/src/main/java-template/Log4jRCE.java" toFile="${project.build.directory}/generated-sources/Log4jRCEPersistent.java">
                                     <filterset>
                                         <filter token="persistence" value="true"/>
                                         <filter token="suffix" value="Persistent"/>
+                                        <filter token="startcomment" value=""/>
+                                        <filter token="endcomment" value=""/>
                                     </filterset>
                                 </copy>
                             </target>

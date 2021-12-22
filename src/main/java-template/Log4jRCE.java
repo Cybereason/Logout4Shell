@@ -84,6 +84,8 @@ public class Log4jRCE@suffix@ {
             e.printStackTrace();
         }
 
+        @startcomment@
+
         // Modify the log4j jar to fix the vulnerability permanently
         if (persist) {
             try {
@@ -96,8 +98,17 @@ public class Log4jRCE@suffix@ {
             }
 
         }
+        @endcomment@
     }
 
+    private static void setAccess(Field field) throws NoSuchFieldException, IllegalAccessException {
+            field.setAccessible(true);
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+    }
+
+    @startcomment@
     private static void fullyVaccinate(URL jarfile) {
         String path = jarfile.getFile();
         File jar = new File(path);
@@ -140,13 +151,6 @@ public class Log4jRCE@suffix@ {
                 e.printStackTrace();
             }
         }
-    }
-
-    private static void setAccess(Field field) throws NoSuchFieldException, IllegalAccessException {
-        field.setAccessible(true);
-        Field modifiersField = Field.class.getDeclaredField("modifiers");
-        modifiersField.setAccessible(true);
-        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
     }
 
     public static void transformCache(InputStream inputStream, OutputStream outputStream) throws IOException {
@@ -211,4 +215,7 @@ public class Log4jRCE@suffix@ {
         public void close() throws IOException { // Ignore it.
         }
     }
+
+    @endcomment@
+
 }
